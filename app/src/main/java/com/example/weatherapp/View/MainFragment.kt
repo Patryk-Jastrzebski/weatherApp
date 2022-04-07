@@ -88,7 +88,7 @@ class MainFragment: Fragment() {
 
                         temperatureFeelsLikeText.text = tempFeels
                         currentTemperatureText.text = "$currentTemp°"
-                        currentTownNameText.text = "${forecast.name}, Poland"
+                        currentTownNameText.text = "${forecast.name}"
                         descriptionText.text = weatherDescription
                         windSpeedText.text = "$windSpeed m/h"
                         humidityText.text = "$humidity %"
@@ -118,7 +118,7 @@ class MainFragment: Fragment() {
 
                 temperatureFeelsLikeText.text = tempFeels
                 currentTemperatureText.text = "$currentTemp°"
-                currentTownNameText.text = "${forecast.name}, Poland"
+                currentTownNameText.text = "${forecast.name}"
                 descriptionText.text = weatherDescription
                 windSpeedText.text = "$windSpeed m/h"
                 humidityText.text = "$humidity %"
@@ -141,5 +141,5 @@ private fun convert(s: Int): String {
     return dt
 }
 private fun searchWeather(town: String): String {
-    return URL("http://api.openweathermap.org/data/2.5/weather?q=$town,pl&APPID=bbcf90fa8ba8a625b9a8e11691280a77").readText()
+    return URL("http://api.openweathermap.org/data/2.5/weather?q=$town&APPID=bbcf90fa8ba8a625b9a8e11691280a77").readText()
 }
