@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
+import com.example.weatherapp.Model.API
 import com.example.weatherapp.Model.CurrentWeatherResponse
 import com.example.weatherapp.Model.Icon
 import com.example.weatherapp.ViewModel.MainViewModel
@@ -56,6 +57,37 @@ class MainFragment: Fragment() {
         val currentDateText = view.findViewById<TextView>(R.id.current_date)
         val currentIcon = view.findViewById<ImageView>(R.id.weatherIcon)
 
+        fun findWeather(searchTown: String) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val data = API.searchWeather(searchTown)
+                val gson = Gson()
+                val forecast = gson.fromJson(data,CurrentWeatherResponse::class.java)
+                withContext(Dispatchers.Main) {
+                    val currentTemp: Int = (forecast.main.temp).toInt() - 274
+                    val tempFeels = "Feels like " + (forecast.main.feelsLike - 274).toInt() + "°"
+                    val weatherDescription = forecast.weather[0].description
+                    val windSpeed = forecast.wind.speed
+                    val humidity = forecast.main.humidity
+                    val visibility = forecast.visibility/100
+                    val pressure = forecast.main.pressure
+                    val currentDate: String =
+                        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
+
+                    temperatureFeelsLikeText.text = tempFeels
+                    currentTemperatureText.text = "$currentTemp°"
+                    currentTownNameText.text = "${forecast.name}"
+                    descriptionText.text = weatherDescription
+                    windSpeedText.text = "$windSpeed m/h"
+                    humidityText.text = "$humidity %"
+                    visibilityText.text = "$visibility %"
+                    sunriseTimeText.text = convert(forecast.sys.sunrise)
+                    sunsetTimeText.text = convert(forecast.sys.sunset)
+                    pressureText.text = "$pressure hPa"
+                    currentDateText.text = "$currentDate"
+                    currentIcon.setImageResource(Icon.weatherIcon(forecast.weather[0].icon))}}
+
+        }
+
         view.findViewById<Button>(R.id.lessDetails).apply {
             setOnClickListener {
                 view.findNavController().navigate(R.id.action_mainFragment_to_bigFontFragment)
@@ -70,65 +102,15 @@ class MainFragment: Fragment() {
                 }
 
                 override fun onQueryTextSubmit(newText: String?): Boolean {
-                    lifecycleScope.launch(Dispatchers.IO) {
                     search = newText!!
-                    val data = searchWeather(search)
-                    val gson = Gson()
-                    val forecast = gson.fromJson(data,CurrentWeatherResponse::class.java)
-                    withContext(Dispatchers.Main) {
-                        val currentTemp: Int = (forecast.main.temp).toInt() - 274
-                        val tempFeels = "Feels like " + (forecast.main.feelsLike - 274).toInt() + "°"
-                        val weatherDescription = forecast.weather[0].description
-                        val windSpeed = forecast.wind.speed
-                        val humidity = forecast.main.humidity
-                        val visibility = forecast.visibility/100
-                        val pressure = forecast.main.pressure
-                        val currentDate: String =
-                            SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
-
-                        temperatureFeelsLikeText.text = tempFeels
-                        currentTemperatureText.text = "$currentTemp°"
-                        currentTownNameText.text = "${forecast.name}"
-                        descriptionText.text = weatherDescription
-                        windSpeedText.text = "$windSpeed m/h"
-                        humidityText.text = "$humidity %"
-                        visibilityText.text = "$visibility %"
-                        sunriseTimeText.text = convert(forecast.sys.sunrise)
-                        sunsetTimeText.text = convert(forecast.sys.sunset)
-                        pressureText.text = "$pressure hPa"
-                        currentDateText.text = "$currentDate"
-                        currentIcon.setImageResource(Icon.weatherIcon(forecast.weather[0].icon))}}
+                    findWeather(search)
                     return false
                 }
             })
-
-            val data = searchWeather(search)
-            val gson = Gson()
-            val forecast = gson.fromJson(data,CurrentWeatherResponse::class.java)
-            withContext(Dispatchers.Main) {
-                val currentTemp: Int = (forecast.main.temp).toInt() - 274
-                val tempFeels = "Feels like " + (forecast.main.feelsLike - 274).toInt() + "°"
-                val weatherDescription = forecast.weather[0].description
-                val windSpeed = forecast.wind.speed
-                val humidity = forecast.main.humidity
-                val visibility = forecast.visibility/100
-                val pressure = forecast.main.pressure
-                val currentDate: String =
-                    SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
-
-                temperatureFeelsLikeText.text = tempFeels
-                currentTemperatureText.text = "$currentTemp°"
-                currentTownNameText.text = "${forecast.name}"
-                descriptionText.text = weatherDescription
-                windSpeedText.text = "$windSpeed m/h"
-                humidityText.text = "$humidity %"
-                visibilityText.text = "$visibility %"
-                sunriseTimeText.text = convert(forecast.sys.sunrise)
-                sunsetTimeText.text = convert(forecast.sys.sunset)
-                pressureText.text = "$pressure hPa"
-                currentDateText.text = "$currentDate"
-                currentIcon.setImageResource(Icon.weatherIcon(forecast.weather[0].icon))
-                }}}}
+            findWeather(search)
+        }
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 private fun convert(s: Int): String {
@@ -139,7 +121,4 @@ private fun convert(s: Int): String {
         .atZone(ZoneId.systemDefault())
         .toLocalTime().minute}"
     return dt
-}
-private fun searchWeather(town: String): String {
-    return URL("http://api.openweathermap.org/data/2.5/weather?q=$town&APPID=bbcf90fa8ba8a625b9a8e11691280a77").readText()
 }
